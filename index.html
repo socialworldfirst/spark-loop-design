@@ -247,7 +247,7 @@
 
       <div class="note" style="border-left-color:var(--auto)"><b>The END GOAL box is not a stage, it is a test.</b> Your end goal is stored as a checkable spec, for example <code>{deliverable:"talent_read_doc", scripts:12, voice:"spoken"}</code>. After the doc stage, every tick the loop asks one question of reality: does that doc exist, does it hold 12 scripts, are they spoken. The instant all three are true the loop sends the final link and ends, with nothing left running. That green tick under the box is the whole reason this is a goal-bounded loop and not a standing process: it has a finish line, and it knows when it has crossed it.</div>
 
-      <div class="note"><b>The produce tail is format-specific.</b> Stages 1 to 3 (idea board, research, cards) are the same for every format. Stage 4 onward routes to the format you named: short-form scripts via <code>/spark_script</code>, long-form via <code>/wf_yt_script</code>, carousels via <code>/wf_carousel</code>, posts via <code>/wf_social_post</code>. The spoken-voice rule and GATE 3 apply to script formats; a carousel or post finishes at its own produce skill.</div>
+      <div class="note"><b>The produce tail is format-specific.</b> Stages 1 to 3 (idea board, research, cards) are the same for every format. Stage 4 onward routes to the format you named: short-form scripts via <code>/spark_script</code>, long-form via the China Sourcing Map pipeline (<code>/csn_city_yt_script</code>, Thomas阿福), carousels via <code>/wf_carousel</code>, posts via <code>/wf_social_post</code>. The spoken-voice rule and GATE 3 apply to script formats; a carousel or post finishes at its own produce skill.</div>
       <div class="note"><b>In autonomous mode the rhythm collapses.</b> If your brief set <code>autonomous_run:true</code>, the three amber gates self-clear by heuristic (top angles by fit per pillar at GATE 1, keep the researched winners at GATE 2, ship the spoken scripts at GATE 3) and all six stages run start to finish unattended to the exact same doc. The machine does not change, only who answers at the amber dots.</div>
     </section>
 
@@ -276,7 +276,7 @@
       <p class="mut" style="font-size:13px; margin:14px 0 6px">SparkLoop produces all of them, routing the produce stage to the matching skill:</p>
       <div class="pillrow" style="margin-bottom:20px">
         <span class="pill"><b>short-form script</b> · /spark_script</span>
-        <span class="pill"><b>long-form script</b> · /wf_yt_script</span>
+        <span class="pill"><b>long-form script</b> · CSN pipeline (Thomas阿福)</span>
         <span class="pill"><b>carousel</b> · /wf_carousel</span>
         <span class="pill"><b>social post</b> · /wf_social_post</span>
         <span class="pill">+ more</span>
