@@ -215,6 +215,39 @@
         </svg>
         <p class="small">The brief lands in the run's <code>seed_context</code> and <code>alignment</code> fields, which already exist. The end goal becomes a machine-checkable <code>end_goal</code> field. Four gates stay amber (your call), the work between them stays green (Claude's to run). The loop ticks the machine until the goal artifact exists, then stops on its own.</p>
       </div>
+
+      <h3>Anatomy of the run machine, stage by stage</h3>
+      <p>Those six dots are not labels, they are six real stages with a strict rhythm: an amber gate (your decision) always brackets a green auto leg (Claude's to run), and the last auto leg lands on the goal. Three of your decisions, three of Claude's drives, interleaved. Here is what actually happens at each, the real sub-skill behind it, and the <code>run.json</code> state it sits in.</p>
+      <ol class="steps">
+        <li><b>Idea board</b><span class="tag gate">GATE 1 · you decide</span><br>
+          <code>/spark_idea</code> turns your brief into an angle board: a deployed HTML page of angles spread across your pillars. You tick the ones that are on-brand and worth pursuing, comment, flag "find more like this", and paste back. Claude iterates the board v2, v3, until you say "wrap". This is a human gate because it is brand fit and editorial taste, the one thing a heuristic should not decide for you.
+          <span class="small" style="display:block; margin-top:6px">In: the brief. Out: a wrapped handoff doc listing the angles you kept. · <code>stage=idea_board → idea_iterating</code> · <code>open_gate=gate1_angle_picks</code></span>
+        </li>
+        <li><b>Listen + produce</b><span class="tag auto">AUTO · Claude drives</span><br>
+          Two auto sub-stages, no stops. <code>/spark_listen</code> clusters the angles you kept and runs deep multi-agent research per cluster (on the shopify run this was 5 clusters pulling real numbers: Shopify's 1.5 to 2% conversion fee, bank FX margins of 2 to 4%, the $800M hidden-FX figure, FCA safeguarding). Then the production-cards page is built straight from those research briefs, one card per researched angle, and deployed. Claude runs the whole leg without asking.
+          <span class="small" style="display:block; margin-top:6px">In: your kept angles. Out: research briefs plus a live cards page. · <code>stage=listen → produce</code> · <code>open_gate=null</code></span>
+        </li>
+        <li><b>Cards</b><span class="tag gate">GATE 2 · you decide</span><br>
+          On the cards page you pick which researched angles are strong enough to become scripts, drop comments, paste back. This is a separate gate from the first because research changes things: an angle that looked great in the brief can deflate once the facts are in, and a quiet one can become the best card after research backs it. You are judging the angles with the evidence now attached.
+          <span class="small" style="display:block; margin-top:6px">In: the cards page. Out: the picked angle set that goes to script. · <code>stage=produce</code> · <code>open_gate=gate2_produce_picks</code></span>
+        </li>
+        <li><b>Spoken scripts</b><span class="tag auto">AUTO · Claude drives</span><br>
+          <code>/spark_script</code> writes each picked angle as a pure spoken-word voiceover script grounded in its own research brief, runs the hook engine, and builds the variant page. Your standing rule applies here: spoken-word talent-read copy is the default treatment, and the live <code>/voice_picker</code> creator-search path stays off unless the brief asked for it. This is the leg that produces the words your talent will read.
+          <span class="small" style="display:block; margin-top:6px">In: picked angles plus research. Out: drafted spoken scripts, usually a few variants per idea. · <code>stage=script</code> · <code>open_gate=null</code></span>
+        </li>
+        <li><b>Pick winner</b><span class="tag gate">GATE 3 · you decide</span><br>
+          On the variant page you pick the one script that ships per idea and paste back. The last taste call: which hook lands, which read is tightest, which version sounds like WorldFirst out loud. In the old design there was a fourth gate here for choosing the voice-polish engine. That gate is gone, because spoken scripts are now automatic and voice picker is a one-word opt-in, not a stop.
+          <span class="small" style="display:block; margin-top:6px">In: the script variants. Out: one winning script per idea. · <code>stage=voice_iterate</code> · <code>open_gate=gate3_voice_picks</code></span>
+        </li>
+        <li><b>Talent-read doc</b><span class="tag auto">AUTO · Claude drives</span><br>
+          Claude assembles the winning scripts into one talent-read Google Doc with locked spoken-word styling, sets it to anyone-with-link viewer, and logs it to your inbox. This is the terminal artifact, the thing your talent actually reads from, and the thing the end-goal check is looking for.
+          <span class="small" style="display:block; margin-top:6px">In: the winners. Out: the final doc plus its share link. · <code>stage=final → done</code> · <code>open_gate=null</code></span>
+        </li>
+      </ol>
+
+      <div class="note" style="border-left-color:var(--auto)"><b>The END GOAL box is not a stage, it is a test.</b> Your end goal is stored as a checkable spec, for example <code>{deliverable:"talent_read_doc", scripts:12, voice:"spoken"}</code>. After the doc stage, every tick the loop asks one question of reality: does that doc exist, does it hold 12 scripts, are they spoken. The instant all three are true the loop sends the final link and ends, with nothing left running. That green tick under the box is the whole reason this is a goal-bounded loop and not a standing process: it has a finish line, and it knows when it has crossed it.</div>
+
+      <div class="note"><b>In autonomous mode the rhythm collapses.</b> If your brief set <code>autonomous_run:true</code>, the three amber gates self-clear by heuristic (top angles by fit per pillar at GATE 1, keep the researched winners at GATE 2, ship the spoken scripts at GATE 3) and all six stages run start to finish unattended to the exact same doc. The machine does not change, only who answers at the amber dots.</div>
     </section>
 
     <!-- 03 -->
