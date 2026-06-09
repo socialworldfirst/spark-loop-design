@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>The Spark Loop — production controller design</title>
+<title>The Spark Loop — brief-driven, goal-bounded</title>
 <style>
   :root{
     --ink:#16181d; --ink2:#3c4148; --mut:#71777f; --faint:#9aa0a6;
@@ -22,7 +22,6 @@
   }
   a{color:inherit}
   .wrap{display:grid; grid-template-columns:232px minmax(0,1fr); max-width:1180px; margin:0 auto; gap:0}
-  /* sidebar */
   aside{position:sticky; top:0; align-self:start; height:100vh; padding:46px 26px 40px; border-right:1px solid var(--line)}
   .brand{font-weight:600; letter-spacing:-.01em; font-size:15px}
   .brand small{display:block; color:var(--mut); font-weight:400; margin-top:4px; font-size:12.5px}
@@ -35,7 +34,6 @@
   .legend .row{display:flex; gap:8px; align-items:center}
   .dot{width:8px; height:8px; border-radius:50%; flex:none}
   .dot.a{background:var(--auto)} .dot.g{background:var(--gate)}
-  /* main */
   main{padding:46px 56px 120px; min-width:0}
   header.hd{margin-bottom:8px}
   h1{font-size:30px; line-height:1.12; letter-spacing:-.02em; margin:0 0 10px; font-weight:600}
@@ -49,69 +47,70 @@
   p{margin:0 0 14px; max-width:70ch}
   .mut{color:var(--mut)}
   code{font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; background:#f3f3f0; padding:1px 5px; border-radius:4px; color:#2a2e33}
-  .kbd{font:12px/1 ui-monospace,Menlo,monospace; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:2px 6px; background:#fff; color:var(--ink2)}
-  /* cards / grid */
   .grid{display:grid; gap:14px}
   .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
   .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px}
   .card h4{margin:0 0 6px; font-size:14px; font-weight:600; letter-spacing:-.01em}
   .card p{font-size:13.5px; color:var(--ink2); margin:0}
   .eyebrow{font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin:0 0 14px; font-weight:600}
-  /* table */
   table{border-collapse:collapse; width:100%; font-size:13.5px; margin:6px 0 4px}
   th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line2); vertical-align:top}
   th{font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--mut); font-weight:600}
   td code{font-size:12px}
   td.tick{color:var(--auto); font-weight:600; white-space:nowrap}
   td.cross{color:var(--gate); font-weight:600; white-space:nowrap}
-  /* steps */
   ol.steps{counter-reset:s; list-style:none; padding:0; margin:8px 0 0}
   ol.steps>li{counter-increment:s; position:relative; padding:14px 0 14px 44px; border-bottom:1px solid var(--line2)}
   ol.steps>li:last-child{border-bottom:0}
   ol.steps>li::before{content:counter(s); position:absolute; left:0; top:13px; width:26px; height:26px; border:1px solid var(--line); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--ink2); background:#fff; font-variant-numeric:tabular-nums}
   ol.steps>li b{font-weight:600}
   ol.steps>li .tag{font-size:11px; font-weight:600; letter-spacing:.03em; padding:1px 7px; border-radius:20px; border:1px solid var(--line); color:var(--mut); margin-left:8px; white-space:nowrap}
-  ol.steps>li .tag.auto{color:var(--auto)} ol.steps>li .tag.gate{color:var(--gate)}
-  /* worked timeline */
+  ol.steps>li .tag.auto{color:var(--auto)} ol.steps>li .tag.gate{color:var(--gate)} ol.steps>li .tag.stop{color:var(--accent)}
   .tl{margin-top:8px; border-left:1px solid var(--line); padding-left:0}
   .tl .ev{position:relative; padding:0 0 22px 26px}
   .tl .ev::before{content:""; position:absolute; left:-4.5px; top:5px; width:8px; height:8px; border-radius:50%; background:var(--accent)}
   .tl .ev.g::before{background:var(--gate)} .tl .ev.a::before{background:var(--auto)}
+  .tl .ev.done::before{background:var(--ink); box-shadow:0 0 0 3px #fff,0 0 0 4px var(--ink)}
   .tl .ev .t{font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; margin-bottom:2px}
   .tl .ev .h{font-weight:600; font-size:14px; margin-bottom:3px}
   .tl .ev p{font-size:13px; color:var(--ink2); margin:0; max-width:66ch}
-  /* callout */
   .note{border:1px solid var(--line); border-left:2px solid var(--accent); border-radius:0 10px 10px 0; padding:14px 18px; background:#fff; margin:18px 0; font-size:13.5px; color:var(--ink2)}
   .note b{color:var(--ink)}
   .pillrow{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0}
   .pill{font-size:12px; border:1px solid var(--line); border-radius:20px; padding:3px 11px; color:var(--ink2); background:#fff}
   .pill b{font-weight:600}
   hr.soft{border:0; border-top:1px solid var(--line); margin:30px 0}
-  .arrowflow{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; margin-top:6px}
-  .af{flex:1; min-width:120px; border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff; position:relative}
-  .af + .af{margin-left:26px}
-  .af + .af::before{content:"→"; position:absolute; left:-21px; top:50%; transform:translateY(-50%); color:var(--faint); font-size:15px}
-  .af .lab{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin-bottom:3px}
-  .af .v{font-size:13.5px; font-weight:600}
-  .af .s{font-size:12px; color:var(--mut); margin-top:2px}
   svg{display:block; max-width:100%; height:auto}
   .svgwrap{border:1px solid var(--line); border-radius:12px; background:#fff; padding:20px; margin-top:6px}
   .small{font-size:12.5px; color:var(--mut); margin-top:8px}
+  /* signature block */
+  .sig{border:1px solid var(--line); border-radius:14px; background:#fff; padding:26px 28px; margin-top:4px}
+  .sig .line{font:600 26px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:-.01em; color:var(--ink); display:flex; flex-wrap:wrap; align-items:baseline; gap:10px}
+  .sig .line .cmd{color:var(--ink)}
+  .sig .line .arg{color:var(--accent); border-bottom:2px solid var(--gate); padding-bottom:1px}
+  .sig .line .arg2{color:var(--accent); border-bottom:2px solid var(--auto); padding-bottom:1px}
+  .sig .ann{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:22px}
+  .sig .ann div{font-size:13px; color:var(--ink2)}
+  .sig .ann .k{font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:7px}
+  .sig .ann .k .dot{width:7px;height:7px;border-radius:50%}
+  .crossed{display:inline-flex; gap:7px; align-items:center; font-size:12px; color:var(--gate); border:1px solid var(--line); border-radius:20px; padding:3px 11px; background:#fff}
+  .crossed s{color:var(--mut)}
   @media(max-width:880px){
     .wrap{grid-template-columns:1fr} aside{display:none} main{padding:34px 22px 90px}
-    .g2{grid-template-columns:1fr}
+    .g2,.g3{grid-template-columns:1fr} .sig .line{font-size:19px} .sig .ann{grid-template-columns:1fr}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <aside>
-    <div class="brand">The Spark Loop<small>production controller design</small></div>
+    <div class="brand">The Spark Loop<small>brief-driven, goal-bounded</small></div>
     <nav id="nav">
-      <a href="#layers"><span class="n">01</span>What it sits on</a>
-      <a href="#gap"><span class="n">02</span>What is already looped</a>
-      <a href="#design"><span class="n">03</span>The one controller</a>
-      <a href="#goal"><span class="n">04</span>The goal it converges to</a>
+      <a href="#sig"><span class="n">01</span>The signature</a>
+      <a href="#layers"><span class="n">02</span>What it sits on</a>
+      <a href="#form"><span class="n">03</span>The form &amp; cadence</a>
+      <a href="#rules"><span class="n">04</span>The two rules that bound it</a>
       <a href="#tick"><span class="n">05</span>The per-tick reconcile</a>
       <a href="#dial"><span class="n">06</span>The autonomy dial</a>
       <a href="#worked"><span class="n">07</span>Worked example</a>
@@ -126,202 +125,231 @@
   <main>
     <header class="hd">
       <h1>The Spark Loop</h1>
-      <p class="lede">A standing controller that keeps your spark pipe permanently staged: every run parked exactly at a human decision, never sitting on dead auto-work, with the bank and the run queue always topped up. It does not replace anything. It sequences the machine you already built.</p>
+      <p class="lede">You hand over a project brief and an end goal. The loop drives your existing spark machine from that brief to that goal and stops. It reads nothing else: no scan, no meetings, no bank. The outcome is whatever the brief says it is, shipped as spoken-word scripts by default.</p>
       <div class="stamp">
-        <span>Designed 9 June 2026</span>
-        <span>Reads: <code>content_bank.json</code> · <code>runs/*/run.json</code></span>
-        <span>Form: <code>/loop</code> self-paced on a work-hours heartbeat</span>
+        <span>Revised 9 June 2026 · v2 brief-driven</span>
+        <span>Form: <code>/loop until &lt;goal&gt; &lt;brief&gt;</code></span>
+        <span>Default output: spoken scripts</span>
       </div>
     </header>
 
-    <!-- 01 -->
-    <section id="layers">
-      <h2><span class="n">01</span> What the loop sits on</h2>
-      <p>Your pipe is already two layers. The loop is the missing third thing that moves work from the first into the second.</p>
-      <div class="svgwrap">
-        <svg viewBox="0 0 900 360" role="img" aria-label="Two-layer architecture">
-          <!-- tributaries -->
-          <text x="20" y="30" font-size="12" fill="#9aa0a6" font-family="ui-monospace,Menlo,monospace">TRIBUTARIES (already on a weekly cron)</text>
-          <g font-size="12.5" fill="#3c4148" font-family="-apple-system,Helvetica,sans-serif">
-            <rect x="20" y="42" width="150" height="30" rx="7" fill="#fff" stroke="#e7e7e4"/><text x="34" y="61">spark_scan</text>
-            <rect x="20" y="80" width="150" height="30" rx="7" fill="#fff" stroke="#e7e7e4"/><text x="34" y="99">meetings + sessions</text>
-            <rect x="20" y="118" width="150" height="30" rx="7" fill="#fff" stroke="#e7e7e4"/><text x="34" y="137">steven_input</text>
-          </g>
-          <!-- arrows to bank -->
-          <g stroke="#c8cdc6" fill="none"><path d="M170 57 H250" marker-end="url(#a)"/><path d="M170 95 H250" marker-end="url(#a)"/><path d="M170 133 H250" marker-end="url(#a)"/></g>
-          <!-- BANK -->
-          <rect x="250" y="40" width="190" height="170" rx="12" fill="#fbfbf9" stroke="#cfd4cd"/>
-          <text x="266" y="64" font-size="13" font-weight="600" fill="#16181d">THE BANK · the lake</text>
-          <text x="266" y="84" font-size="11.5" fill="#71777f" font-family="ui-monospace,Menlo,monospace">content_bank.json</text>
-          <g font-size="12" fill="#3c4148">
-            <text x="266" y="112">Status lifecycle:</text>
-            <text x="266" y="132" font-size="11.5" font-family="ui-monospace,Menlo,monospace" fill="#2a2e33">raw → sharpened →</text>
-            <text x="266" y="150" font-size="11.5" font-family="ui-monospace,Menlo,monospace" fill="#2a2e33">greenlit → in_production</text>
-            <text x="266" y="168" font-size="11.5" font-family="ui-monospace,Menlo,monospace" fill="#2a2e33">→ shipped → archived</text>
-            <text x="266" y="194" font-size="11.5" fill="#71777f">scored by Audience_Fit</text>
-          </g>
-          <!-- controller -->
-          <path d="M440 125 H505" stroke="#16181d" fill="none" stroke-width="1.4" marker-end="url(#b)"/>
-          <rect x="505" y="92" width="120" height="66" rx="12" fill="#16181d"/>
-          <text x="565" y="120" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">SPARK</text>
-          <text x="565" y="138" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">LOOP</text>
-          <text x="565" y="176" font-size="10.5" fill="#9aa0a6" text-anchor="middle">the new piece</text>
-          <path d="M625 125 H690" stroke="#16181d" fill="none" stroke-width="1.4" marker-end="url(#b)"/>
-          <!-- RUNS -->
-          <rect x="690" y="40" width="190" height="250" rx="12" fill="#fff" stroke="#cfd4cd"/>
-          <text x="706" y="64" font-size="13" font-weight="600" fill="#16181d">THE RUNS · state machine</text>
-          <text x="706" y="84" font-size="11.5" fill="#71777f" font-family="ui-monospace,Menlo,monospace">runs/&lt;slug&gt;/run.json</text>
-          <g font-size="11.5" font-family="-apple-system,Helvetica,sans-serif">
-            <circle cx="714" cy="108" r="4" fill="#b07a2b"/><text x="726" y="112" fill="#3c4148">idea board · GATE 1</text>
-            <circle cx="714" cy="132" r="4" fill="#3f7d58"/><text x="726" y="136" fill="#3c4148">listen + produce</text>
-            <circle cx="714" cy="156" r="4" fill="#b07a2b"/><text x="726" y="160" fill="#3c4148">cards · GATE 2</text>
-            <circle cx="714" cy="180" r="4" fill="#3f7d58"/><text x="726" y="184" fill="#3c4148">script drafting</text>
-            <circle cx="714" cy="204" r="4" fill="#b07a2b"/><text x="726" y="208" fill="#3c4148">voice iterate · GATE 3</text>
-            <circle cx="714" cy="228" r="4" fill="#b07a2b"/><text x="726" y="232" fill="#3c4148">polish pick · GATE 4</text>
-            <circle cx="714" cy="252" r="4" fill="#3f7d58"/><text x="726" y="256" fill="#3c4148">final Google Doc</text>
-          </g>
-          <defs>
-            <marker id="a" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 z" fill="#c8cdc6"/></marker>
-            <marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#16181d"/></marker>
-          </defs>
-        </svg>
-        <p class="small">The bank holds <b>candidate angles</b> with a Status. The runs hold <b>active productions</b> with a <code>stage</code> and an <code>open_gate</code>. Four gates are amber (your call), everything between them is green (Claude's to run). The loop is the engine that pulls greenlit angles out of the lake and walks them through the machine, gate to gate.</p>
+    <!-- 01 signature -->
+    <section id="sig">
+      <h2><span class="n">01</span> The signature</h2>
+      <p>The whole mental model is two arguments. One says what to make it from, the other says when it is done.</p>
+      <div class="sig">
+        <div class="line">
+          <span class="cmd">loop</span>
+          <span class="arg">⟨project brief⟩</span>
+          <span class="arg2">⟨end goal⟩</span>
+        </div>
+        <div class="ann">
+          <div>
+            <div class="k"><span class="dot" style="background:var(--gate)"></span>project brief</div>
+            You provide it before the loop starts. It is the only source of the outcome: topic, audience, pillars, constraints, the angle to take. If it is not in the brief, it does not enter the work.
+          </div>
+          <div>
+            <div class="k"><span class="dot" style="background:var(--auto)"></span>end goal</div>
+            The stop condition. What "done" looks like as a concrete artifact, for example twelve spoken-word reel scripts in a talent-read doc. The loop converges on it, then ends.
+          </div>
+        </div>
       </div>
+      <div class="note"><b>This is the answer to your first question, loop or goal.</b> They are not rivals. The goal is the second argument. The loop is what carries the brief to it. <code>/loop until</code> is the exact shape: a finite job with a finish line you state up front.</div>
     </section>
 
     <!-- 02 -->
-    <section id="gap">
-      <h2><span class="n">02</span> What is already looped, and the one gap</h2>
-      <p>Half the loop already exists as cron. The refill side is done. The drive side is the hole.</p>
-      <table>
-        <thead><tr><th>Job</th><th>Cadence</th><th>Does</th><th>Covers</th></tr></thead>
-        <tbody>
-          <tr><td><code>spark-scan-weekly</code></td><td>Mon 09:40</td><td>scans 7 days, banks new sparks, redeploys scan board</td><td class="tick">Refills the lake</td></tr>
-          <tr><td><code>spark-dashboard-weekly</code></td><td>Wed 13:00</td><td>refreshes the pipeline status dashboard</td><td class="tick">Reports state</td></tr>
-          <tr><td><code>/spark</code> front door</td><td>on demand</td><td>drives one run gate to gate when you call it</td><td class="cross">Needs you to start + nudge each run</td></tr>
-          <tr><td style="color:var(--gate)"><b>spark-loop</b> (proposed)</td><td>2h, 09–21</td><td>keeps every run staged at its next gate, keeps the queue full</td><td class="cross">The missing engine</td></tr>
-        </tbody>
-      </table>
-      <div class="note">Today the bank fills itself every Monday, but nothing <b>spends</b> it. Greenlit angles sit in the lake until you personally open a <code>/spark</code> run and hand-walk it. The loop closes that: the lake fills on its own, and now it drains on its own too, stopping only at your four decisions.</div>
+    <section id="layers">
+      <h2><span class="n">02</span> What the loop sits on</h2>
+      <p>Brief in on the left, goal out on the right, your existing run state machine in the middle. Nothing feeds the front except you.</p>
+      <div class="svgwrap">
+        <svg viewBox="0 0 900 300" role="img" aria-label="Brief to goal architecture">
+          <!-- BRIEF -->
+          <rect x="20" y="56" width="196" height="150" rx="12" fill="#fbfbf9" stroke="#cfd4cd"/>
+          <text x="36" y="80" font-size="13" font-weight="600" fill="#16181d">PROJECT BRIEF</text>
+          <text x="36" y="98" font-size="11" fill="#71777f">you provide, the only source</text>
+          <g font-size="11.5" fill="#3c4148" font-family="-apple-system,Helvetica,sans-serif">
+            <text x="36" y="124">· topic + context</text>
+            <text x="36" y="144">· audience + pillars</text>
+            <text x="36" y="164">· constraints</text>
+            <text x="36" y="190" font-weight="600" fill="#b07a2b">· END GOAL (the stop)</text>
+          </g>
+          <!-- boundary chip -->
+          <g font-size="11" font-family="-apple-system,Helvetica,sans-serif">
+            <rect x="20" y="222" width="196" height="26" rx="13" fill="#fff" stroke="#e7e7e4"/>
+            <text x="35" y="239" fill="#b07a2b">✕</text>
+            <text x="50" y="239" fill="#71777f" text-decoration="line-through">no scan · no meetings · no bank</text>
+          </g>
+          <!-- arrow -->
+          <path d="M216 131 H266" stroke="#16181d" fill="none" stroke-width="1.4" marker-end="url(#b)"/>
+          <!-- LOOP -->
+          <path d="M300 96 a26 16 0 1 1 40 0" fill="none" stroke="#9aa0a6" stroke-width="1.2" marker-end="url(#g)"/>
+          <text x="320" y="74" font-size="10.5" fill="#9aa0a6" text-anchor="middle">ticks to goal</text>
+          <rect x="266" y="104" width="120" height="66" rx="12" fill="#16181d"/>
+          <text x="326" y="132" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">SPARK</text>
+          <text x="326" y="150" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">LOOP</text>
+          <!-- arrow -->
+          <path d="M386 137 H440" stroke="#16181d" fill="none" stroke-width="1.4" marker-end="url(#b)"/>
+          <!-- MACHINE -->
+          <rect x="440" y="40" width="216" height="226" rx="12" fill="#fff" stroke="#cfd4cd"/>
+          <text x="456" y="64" font-size="13" font-weight="600" fill="#16181d">RUN MACHINE</text>
+          <text x="456" y="82" font-size="11" fill="#71777f" font-family="ui-monospace,Menlo,monospace">runs/&lt;slug&gt;/run.json</text>
+          <g font-size="11.5" font-family="-apple-system,Helvetica,sans-serif">
+            <circle cx="464" cy="106" r="4" fill="#b07a2b"/><text x="476" y="110" fill="#3c4148">idea board · GATE 1</text>
+            <circle cx="464" cy="130" r="4" fill="#3f7d58"/><text x="476" y="134" fill="#3c4148">listen + produce</text>
+            <circle cx="464" cy="154" r="4" fill="#b07a2b"/><text x="476" y="158" fill="#3c4148">cards · GATE 2</text>
+            <circle cx="464" cy="178" r="4" fill="#3f7d58"/><text x="476" y="182" fill="#3c4148">spoken scripts (default)</text>
+            <circle cx="464" cy="202" r="4" fill="#b07a2b"/><text x="476" y="206" fill="#3c4148">pick winner · GATE 3</text>
+            <circle cx="464" cy="226" r="4" fill="#3f7d58"/><text x="476" y="230" fill="#3c4148">talent-read doc</text>
+          </g>
+          <!-- arrow -->
+          <path d="M656 137 H708" stroke="#16181d" fill="none" stroke-width="1.4" marker-end="url(#b)"/>
+          <!-- GOAL -->
+          <rect x="708" y="104" width="172" height="66" rx="12" fill="#fbfbf9" stroke="#16181d"/>
+          <text x="794" y="128" font-size="12.5" font-weight="600" fill="#16181d" text-anchor="middle">END GOAL</text>
+          <text x="794" y="146" font-size="10.5" fill="#71777f" text-anchor="middle">artifact exists</text>
+          <text x="794" y="190" font-size="11" fill="#3f7d58" text-anchor="middle">✓ goal met → loop ends</text>
+          <defs>
+            <marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#16181d"/></marker>
+            <marker id="g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 z" fill="#9aa0a6"/></marker>
+          </defs>
+        </svg>
+        <p class="small">The brief lands in the run's <code>seed_context</code> and <code>alignment</code> fields, which already exist. The end goal becomes a machine-checkable <code>end_goal</code> field. Four gates stay amber (your call), the work between them stays green (Claude's to run). The loop ticks the machine until the goal artifact exists, then stops on its own.</p>
+      </div>
     </section>
 
     <!-- 03 -->
-    <section id="design">
-      <h2><span class="n">03</span> The design: one controller, two engines</h2>
-      <p>Not a fleet. One self-paced loop, woken by a work-hours heartbeat. The two <code>/loop</code> engines map cleanly onto the two speeds the pipe runs at.</p>
+    <section id="form">
+      <h2><span class="n">03</span> The form and cadence</h2>
+      <p>On demand, not on a clock. You start it by handing over the brief. It self-paces from there and ends when the goal is met. No cron, because there is no standing reservoir to maintain any more.</p>
       <div class="grid g2">
         <div class="card">
-          <h4>Heartbeat · CronCreate</h4>
-          <p>A scheduled task fires the controller every ~2h between 09:00 and 21:00. Dumb, reliable, off at night (no point staging boards at 3am). This is the steady tick that reconciles state to target.</p>
+          <h4>Self-paced · ScheduleWakeup</h4>
+          <p>Between ticks the loop sets its own next wake. Fast (~270s, inside the prompt cache) while a research or script workflow is running. Long while it is parked at a gate waiting on you. It is the only timer.</p>
         </div>
         <div class="card">
-          <h4>Fast poll · ScheduleWakeup</h4>
-          <p>While a research or script workflow is mid-flight, the controller self-schedules a ~270s re-check (stays inside the prompt cache window) to catch completion, then drops back to the slow heartbeat. Smart cadence only when something is actually moving.</p>
+          <h4>Bounded · until &lt;end goal&gt;</h4>
+          <p>Every tick checks the goal. The moment the target artifact exists (say the talent-read doc holds the target script count) the loop stops and sends one final line with the link. A real finish line, stated up front.</p>
         </div>
       </div>
-      <div class="note"><b>Why not <code>/loop until</code>?</b> Because there is no finish line. This is a standing reservoir controller, not a task that completes. So the form is self-paced (heartbeat + fast poll), and the <i>goal</i> is a level it holds, not a condition it ends on. The <code>until</code> form is the right shape only for a single run you want chased to done.</div>
+      <div class="note"><b>Why this beats the old cron design.</b> The first version was a standing controller holding bank and run buffers full forever, so it needed a heartbeat. A brief-and-goal job is finite, so a self-paced <code>until</code> loop fits perfectly and there is nothing to schedule, supervise, or leave running after the goal lands.</div>
     </section>
 
     <!-- 04 -->
-    <section id="goal">
-      <h2><span class="n">04</span> The goal it converges to</h2>
-      <p style="font-size:18px; color:var(--ink); max-width:60ch; font-weight:500; letter-spacing:-.01em; line-height:1.4">Drive gate-to-gate dead air to zero. Every run is always parked at a human decision, never mid-auto-stage. And keep two buffers full so you never hit a cold start.</p>
-      <div class="grid g2" style="margin-top:18px">
+    <section id="rules">
+      <h2><span class="n">04</span> The two rules that bound it</h2>
+      <p>These are the constraints you set. They are not preferences inside the loop, they are walls around it.</p>
+      <div class="grid g2">
         <div class="card">
-          <h4>B · bank buffer <span class="mut" style="font-weight:400">target ≈ 10</span></h4>
-          <p>Greenlit, research-ready angles waiting in the lake. The weekly scan keeps this full; the controller escalates an extra <code>/spark_scan</code> only if it runs critically dry.</p>
+          <div class="eyebrow" style="color:var(--gate)">Rule 1 · brief only</div>
+          <h4>It reads your brief and nothing else</h4>
+          <p>No <code>/spark_scan</code>, no meetings ingest, no session sweep, no Content Bank lookup. The outcome is whatever the brief says it should be. The loop never goes hunting for material. You are the front of the pipe.</p>
+          <div class="pillrow">
+            <span class="crossed"><s>spark_scan</s></span>
+            <span class="crossed"><s>meetings</s></span>
+            <span class="crossed"><s>sessions</s></span>
+            <span class="crossed"><s>bank</s></span>
+          </div>
         </div>
         <div class="card">
-          <h4>R · run buffer <span class="mut" style="font-weight:400">target ≈ 3</span></h4>
-          <p>Live runs in-flight, each advanced to and parked at its next gate. If fewer than R runs have a gate open, the controller spawns a new one off the top-fit greenlit angle.</p>
+          <div class="eyebrow" style="color:var(--auto)">Rule 2 · spoken by default</div>
+          <h4>Every script ships as spoken-word</h4>
+          <p>Talent-read spoken scripts are the default treatment for every run. The live <code>/voice_picker</code> creator-search path stays off, it is the route that stalled at ~2M tokens on the shopify run. It runs only when you say "use voice picker" for that brief.</p>
+          <div class="pillrow">
+            <span class="pill"><b>default</b> spoken scripts</span>
+            <span class="pill">opt-in only: voice picker</span>
+          </div>
         </div>
       </div>
-      <p class="small">These two numbers are the whole policy. Everything the loop does each tick is in service of holding B and R at target while never crossing a gate it is not allowed to cross.</p>
     </section>
 
     <!-- 05 -->
     <section id="tick">
       <h2><span class="n">05</span> The per-tick reconcile</h2>
-      <p>One tick is one pass of this list. It is idempotent: if there is nothing to do, it notifies no one and sleeps.</p>
+      <p>One tick is one pass of this list, scoped to the one run the brief created. It is idempotent: nothing to do means it notifies no one and either sleeps or stops.</p>
       <ol class="steps">
-        <li><b>Load state.</b> Read <code>_active.json</code>, every <code>runs/*/run.json</code>, and <code>content_bank.json</code>. Build the picture: who is at a gate, who is on auto-work, how full are B and R.</li>
-        <li><b>Drain auto-work.</b><span class="tag auto">green</span> Any run with <code>open_gate=null</code> and <code>stage≠done</code>: advance the next auto stage. Heavy stages (listen+produce, script) fire the existing multi-agent workflow, token-budgeted. No run should ever still be on auto-work at the next tick.</li>
-        <li><b>Park and notify once.</b><span class="tag gate">amber</span> Any run that just landed on a gate: send one DingTalk line via the kao bot (<code>Spark · GATE 2 open · &lt;topic&gt; · &lt;url&gt;</code>). Dedupe per gate so it never nags twice for the same decision.</li>
-        <li><b>Feed the front.</b> If runs-parked-at-a-gate &lt; R: pull the top Audience_Fit greenlit spark, spawn a fresh <code>/spark</code> run, drive it to GATE 1, notify. Repeat until R is met or the budget is spent.</li>
-        <li><b>Top up the lake.</b> If greenlit-ready &lt; B: trigger an extra <code>/spark_scan</code> beyond the Monday cron. Otherwise leave it to the heartbeat.</li>
-        <li><b>Budget guard.</b> Cap tokens per tick. A research+script workflow runs ~1.3M; a live voice pick ran ~180k per script before you cut it. If the next action would blow the cap, defer it to the next tick, log it, and ping only if it is blocking you.</li>
-        <li><b>Pick the next wake.</b> Workflow still running, self-schedule ~270s. Everything parked at gates and buffers full, sleep to the next heartbeat. Nothing pending at all, push the fallback wake long.</li>
+        <li><b>Load this run's state.</b> Read the brief's <code>run.json</code> only. No scan, no bank, no other runs. Where are we, which gate is open, is the goal met yet.</li>
+        <li><b>Advance auto-work.</b><span class="tag auto">green</span> If the run is on an auto stage (<code>open_gate=null</code>), drive the next leg. Heavy stages (listen+produce, scripts) fire the existing multi-agent workflow, token-budgeted.</li>
+        <li><b>Default to spoken scripts.</b> At the script stage, produce spoken-word talent-read copy. Branch to <code>/voice_picker</code> only if the brief or you explicitly asked for it. Otherwise the live path never runs.</li>
+        <li><b>Park and notify, or auto-clear.</b><span class="tag gate">amber</span> At a gate: in gated mode send one DingTalk line via the kao bot and wait. In autonomous mode, self-clear it (see the dial) and keep driving. Dedupe so a gate pings once.</li>
+        <li><b>Check the end goal.</b><span class="tag stop">stop</span> Test the <code>end_goal</code> against reality: does the target artifact exist with the target shape (e.g. doc present, 12 scripts, spoken). If yes, ship the final link and end the loop.</li>
+        <li><b>Budget guard.</b> Cap tokens per tick. A research+script workflow runs ~1.3M. If the next action would blow the cap, defer to the next tick, log it, ping only if it blocks you.</li>
+        <li><b>Pick the next wake.</b> Workflow running, self-schedule ~270s. Parked at a gate, sleep long. Goal met, do not reschedule at all.</li>
       </ol>
     </section>
 
     <!-- 06 -->
     <section id="dial">
       <h2><span class="n">06</span> The autonomy dial</h2>
-      <p>The one real choice. Gates are human by default, but your <code>run.json</code> already carries an <code>autonomous_run</code> flag, and the shopify run proved it works end to end. So gate-crossing is a per-run switch, not a global mode.</p>
+      <p>The one choice left, set per run when you hand over the brief. Your <code>run.json</code> already carries an <code>autonomous_run</code> flag and the shopify run proved it works end to end.</p>
       <div class="grid g2">
         <div class="card">
           <div class="eyebrow" style="color:var(--gate)">Default · gated</div>
           <h4>The loop stages, you curate</h4>
-          <p>Controller drives every auto leg and parks at all four gates. It kills the "<code>/spark next</code>" nudging and the cold start, but you still pick every angle and every voice. Whenever you sit down, a decision is already waiting with the work staged behind it.</p>
+          <p>Drives every auto leg and parks at the gates. You pick angles at GATE 1, winners at GATE 2, the winning script at GATE 3. The loop removes the nudging and the cold start, you keep the taste calls. Scripts still ship spoken by default.</p>
           <div class="pillrow">
-            <span class="pill"><b>GATE 1</b> you pick angles</span>
-            <span class="pill"><b>GATE 2</b> you pick winners</span>
-            <span class="pill"><b>GATE 3/4</b> you pick voice</span>
+            <span class="pill"><b>GATE 1</b> pick angles</span>
+            <span class="pill"><b>GATE 2</b> pick winners</span>
+            <span class="pill"><b>GATE 3</b> pick script</span>
           </div>
         </div>
         <div class="card">
           <div class="eyebrow" style="color:var(--auto)">Opt-in · autonomous</div>
-          <h4>Set the flag, walk away</h4>
-          <p>Mark a run <code>autonomous_run:true</code> and the controller self-clears its gates: GATE 1 takes top-K by Audience_Fit per pillar, GATE 2 keeps the researched winners, GATE 3/4 default to the bank-only fast polish (not the 2M-token live path). End to end, no stops.</p>
+          <h4>Hand over the brief, walk away</h4>
+          <p>Set <code>autonomous_run:true</code> in the brief and the loop self-clears its gates: top angles by fit per pillar, keep the researched winners, ship the spoken scripts straight to the talent-read doc. End to end to the goal, no stops, no live voice path.</p>
           <div class="pillrow">
-            <span class="pill">use for a <b>proven pillar</b></span>
-            <span class="pill">keep gated for <b>new territory</b></span>
+            <span class="pill">use for a <b>tight brief</b></span>
+            <span class="pill">gate when you want <b>taste in the loop</b></span>
           </div>
         </div>
       </div>
-      <div class="note"><b>This is the answer to "loop or goal".</b> The loop is the heartbeat trigger. The goal is the buffers plus zero dead air. The dial is how much of your judgement the goal is allowed to substitute. They were never rivals: the loop is the container, the goal is the contents, the dial is the lid.</div>
+      <div class="note">Gate 4 from the old design is gone from the default path. Voice polish is no longer a decision: spoken scripts ship automatically, and voice picker is a one-word opt-in, not a gate.</div>
     </section>
 
     <!-- 07 -->
     <section id="worked">
-      <h2><span class="n">07</span> Worked example · real state</h2>
-      <p>Starting from the pipe as it actually is right now: <code>shopify-get-paid</code> is <code>done</code>, <code>_active</code> points at it, the bank holds 33 raw scan sparks plus a few moodboard and steven_input entries, almost nothing greenlit.</p>
+      <h2><span class="n">07</span> Worked example</h2>
+      <p>You hand over a brief and state the goal. Gated mode, spoken scripts (no voice picker).</p>
+      <div class="note" style="border-left-color:var(--gate)">
+        <b>Brief (you provide):</b> WorldFirst x Shopify get-paid. Audience: cross-border Shopify sellers. Four pillars (payment pain, hidden FX, put the money to work, trust and scale). Short-form first, English only.<br>
+        <b>End goal:</b> 12 spoken-word reel scripts in one talent-read Google Doc.<br>
+        <span class="mut">You run:</span> <code>loop ⟨that brief⟩ ⟨12 spoken scripts, talent-read doc⟩</code>
+      </div>
       <div class="tl">
         <div class="ev a">
-          <div class="t">Tick 1 · Mon 11:40 (after the 09:40 weekly scan)</div>
-          <div class="h">Cold pipe, so the loop fills it</div>
-          <p>shopify is done, retire it from active. Runs at a gate: 0, below R=3. Greenlit below B. Controller sharpens the top-fit raw sparks to greenlit, spawns run A on the strongest angle, builds the idea board, parks GATE 1, pings you. Budget left, so it stages B and C the same way. Sleeps to the next heartbeat.</p>
+          <div class="t">Tick 1 · kickoff</div>
+          <div class="h">Brief in, board out. No scan.</div>
+          <p>The loop reads only the brief. Seeds the run from it (<code>seed_context</code>, <code>alignment</code>, <code>end_goal</code>). Builds the idea board, 24 angles across your four pillars, deploys it, parks GATE 1, pings you. Goal not met. Parked on you, so it schedules a long wake.</p>
         </div>
         <div class="ev g">
-          <div class="t">Tick 2 · 13:40 (you cleared GATE 1 on A over lunch)</div>
-          <div class="h">A advances, the loop catches it</div>
-          <p>A is now <code>stage=listen, gate=null</code>, so it gets drained: fire the research+produce workflow (the same 17-agent pattern as the shopify run, budgeted ~1.3M), build the cards page, park GATE 2, ping. B and C are still at GATE 1 and already notified, so no re-nag. Workflow is mid-flight, so it self-schedules a 270s re-check.</p>
+          <div class="t">Tick 2 · you picked 12 angles at GATE 1</div>
+          <div class="h">It catches the clear and drives</div>
+          <p>Run is now on auto. Fires the research+produce workflow (the 17-agent pattern, budgeted), builds the cards page, parks GATE 2, pings. Workflow ran mid-tick, so it self-schedules a 270s recheck.</p>
         </div>
-        <div class="ev a">
-          <div class="t">Tick 2b · +5 min (self-scheduled)</div>
-          <div class="h">Workflow lands</div>
-          <p>Research and cards done, GATE 2 parked and pinged. Nothing else moving, drop back to the slow heartbeat.</p>
+        <div class="ev g">
+          <div class="t">Tick 3 · you picked the winners at GATE 2</div>
+          <div class="h">Spoken scripts, no voice picker</div>
+          <p>Drafts the picked angles as spoken-word talent-read scripts (the default, the live voice path stays off because you did not ask for it). Builds the variant page, parks GATE 3 for the winning script per idea, pings.</p>
         </div>
-        <div class="ev a">
-          <div class="t">Tick 3 · 15:40 (you flagged B autonomous)</div>
-          <div class="h">B runs itself to done</div>
-          <p>You set <code>autonomous_run:true</code> on B and said "just ship that pillar". Controller self-clears B's gates: 3 angles per pillar by fit, research+scripts workflow, bank-only voice polish, final Google Doc assembled, logged to inbox, bank entries flipped to in_production then shipped. Zero stops. A is still parked at GATE 2, C still at GATE 1.</p>
+        <div class="ev done">
+          <div class="t">Tick 4 · you picked at GATE 3</div>
+          <div class="h">Goal met, loop ends</div>
+          <p>Assembles the 12 spoken scripts into one talent-read Google Doc, anyone-with-link viewer, logged to inbox. Checks <code>end_goal</code>: doc exists, 12 scripts, spoken. True. Sends the final line with the link and stops. Nothing left running.</p>
         </div>
       </div>
-      <div class="note">Net effect: whenever you open the laptop, there is always a gate open with the work already staged behind it, and the only thing the pipe ever waits on is your decision, or nothing at all when you have flagged a run autonomous.</div>
+      <p class="small">Had the brief said <b>autonomous</b>, ticks 2 to 4 collapse into one unattended run to the same doc. Had you said <b>use voice picker</b>, tick 3 would route the picked scripts through <code>/voice_picker</code> before the doc. Default leaves both off.</p>
     </section>
 
     <!-- 08 -->
     <section id="build">
       <h2><span class="n">08</span> What to actually build</h2>
-      <p>Three small things. None of them touch the bank schema, <code>/spark_scan</code>, or the sub-skills. The loop only reads state and calls existing skills.</p>
+      <p>Smaller than the old design. No cron, no reconcile-the-reservoir script. The loop is an on-demand <code>until</code> run plus a goal check.</p>
       <ol class="steps">
-        <li><b>A scheduled task <code>spark-loop</code></b><span class="tag">cron 0 9-21/2 * * *</span> whose prompt is "run one Spark Loop reconcile tick" (the step-05 list). Mirrors the other scheduled-task SKILLs you already run.</li>
-        <li><b>A reconcile reader</b> <code>Pipelines/Spark/scripts/loop_reconcile.py</code> that loads bank + all run.json, returns a plan: which runs to drain, which gates to notify, how many new runs to spawn, B/R gaps. Pure state, no side effects, so a tick is cheap and testable.</li>
-        <li><b>Two new <code>run.json</code> fields</b>: <code>last_notified_gate</code> (dedupe the pings) and <code>budget_spent</code> (per-run token tally for the guard). Both additive, nothing existing breaks.</li>
+        <li><b>The invocation.</b> <code>loop ⟨project brief⟩ ⟨end goal⟩</code> maps to a self-paced <code>/loop until &lt;goal met&gt;</code> seeded by the brief. A thin <code>/spark_loop</code> wrapper can take the two arguments and set it up.</li>
+        <li><b>New <code>run.json</code> fields.</b> <code>brief</code> (or a path to it), <code>end_goal</code> (a machine-checkable spec, e.g. <code>{deliverable:"talent_read_doc", scripts:12, voice:"spoken"}</code>), <code>voice_mode</code> (<code>spoken</code> default or <code>voice_picker</code>), plus <code>last_notified_gate</code> to dedupe pings.</li>
+        <li><b>A goal-check function.</b> <code>goal_met(run.json, end_goal)</code> returns true/false. This is the <code>until</code> evaluator and the only new logic of substance.</li>
       </ol>
       <hr class="soft">
-      <p class="mut" style="font-size:13.5px">Default the dial to gated, B=10, R=3, heartbeat 2h across 09–21. Tune R up once you trust it. The first version can even skip the workflow-firing and only do steps 1, 3, 4, 7 (stage boards to GATE 1 and notify), which already removes the cold start and the nudging, then add the drain side once the parking behaviour feels right.</p>
+      <p class="mut" style="font-size:13.5px">Default the dial to gated and the voice to spoken. The minimal v1 can even skip the workflow-firing and just stage the idea board to GATE 1 and notify, which already proves the brief-to-board path. Add the drain side and the goal check once the parking and the spoken-script default feel right.</p>
     </section>
   </main>
 </div>
