@@ -110,7 +110,7 @@
       <a href="#sig"><span class="n">01</span>The signature</a>
       <a href="#layers"><span class="n">02</span>What it sits on</a>
       <a href="#form"><span class="n">03</span>The form &amp; cadence</a>
-      <a href="#rules"><span class="n">04</span>The two rules that bound it</a>
+      <a href="#rules"><span class="n">04</span>The rules that bound it</a>
       <a href="#tick"><span class="n">05</span>The per-tick reconcile</a>
       <a href="#dial"><span class="n">06</span>The autonomy dial</a>
       <a href="#worked"><span class="n">07</span>Worked example</a>
@@ -197,7 +197,7 @@
             <circle cx="464" cy="106" r="4" fill="#b07a2b"/><text x="476" y="110" fill="#3c4148">idea board · GATE 1</text>
             <circle cx="464" cy="130" r="4" fill="#3f7d58"/><text x="476" y="134" fill="#3c4148">listen + produce</text>
             <circle cx="464" cy="154" r="4" fill="#b07a2b"/><text x="476" y="158" fill="#3c4148">cards · GATE 2</text>
-            <circle cx="464" cy="178" r="4" fill="#3f7d58"/><text x="476" y="182" fill="#3c4148">spoken scripts (default)</text>
+            <circle cx="464" cy="178" r="4" fill="#3f7d58"/><text x="476" y="182" fill="#3c4148">produce: named format</text>
             <circle cx="464" cy="202" r="4" fill="#b07a2b"/><text x="476" y="206" fill="#3c4148">pick winner · GATE 3</text>
             <circle cx="464" cy="226" r="4" fill="#3f7d58"/><text x="476" y="230" fill="#3c4148">talent-read doc</text>
           </g>
@@ -247,6 +247,7 @@
 
       <div class="note" style="border-left-color:var(--auto)"><b>The END GOAL box is not a stage, it is a test.</b> Your end goal is stored as a checkable spec, for example <code>{deliverable:"talent_read_doc", scripts:12, voice:"spoken"}</code>. After the doc stage, every tick the loop asks one question of reality: does that doc exist, does it hold 12 scripts, are they spoken. The instant all three are true the loop sends the final link and ends, with nothing left running. That green tick under the box is the whole reason this is a goal-bounded loop and not a standing process: it has a finish line, and it knows when it has crossed it.</div>
 
+      <div class="note"><b>The produce tail is format-specific.</b> Stages 1 to 3 (idea board, research, cards) are the same for every format. Stage 4 onward routes to the format you named: short-form scripts via <code>/spark_script</code>, long-form via <code>/wf_yt_script</code>, carousels via <code>/wf_carousel</code>, posts via <code>/wf_social_post</code>. The spoken-voice rule and GATE 3 apply to script formats; a carousel or post finishes at its own produce skill.</div>
       <div class="note"><b>In autonomous mode the rhythm collapses.</b> If your brief set <code>autonomous_run:true</code>, the three amber gates self-clear by heuristic (top angles by fit per pillar at GATE 1, keep the researched winners at GATE 2, ship the spoken scripts at GATE 3) and all six stages run start to finish unattended to the exact same doc. The machine does not change, only who answers at the amber dots.</div>
     </section>
 
@@ -269,8 +270,17 @@
 
     <!-- 04 -->
     <section id="rules">
-      <h2><span class="n">04</span> The two rules that bound it</h2>
-      <p>These are the constraints you set. They are not preferences inside the loop, they are walls around it.</p>
+      <h2><span class="n">04</span> The rules that bound it</h2>
+      <p>These are the walls around the loop. The first is the one input you must always hand me.</p>
+      <div class="note" style="border-left-color:var(--gate)"><b>Rule 0, the input you must give me: format.</b> The loop never picks the content format for you. It is the single exception to "propose and proceed": no run executes until you have named the format. Name it (reels, carousel, YouTube script, post) and I go. Leave it out and I ask which, before anything else. Everything else I can infer from context, never this. Wrong format wastes a whole run.</div>
+      <p class="mut" style="font-size:13px; margin:14px 0 6px">SparkLoop produces all of them, routing the produce stage to the matching skill:</p>
+      <div class="pillrow" style="margin-bottom:20px">
+        <span class="pill"><b>short-form script</b> · /spark_script</span>
+        <span class="pill"><b>long-form script</b> · /wf_yt_script</span>
+        <span class="pill"><b>carousel</b> · /wf_carousel</span>
+        <span class="pill"><b>social post</b> · /wf_social_post</span>
+        <span class="pill">+ more</span>
+      </div>
       <div class="grid g2">
         <div class="card">
           <div class="eyebrow" style="color:var(--gate)">Rule 1 · brief only</div>
@@ -310,6 +320,7 @@
           <div><b>Genuinely stuck, ask as a last resort.</b> <span class="mut">Only when a load-bearing choice has no sane default. One or two sharp questions, each with a best-guess default baked in. Rare.</span></div>
         </div>
       </div>
+      <div class="note" style="border-left-color:var(--gate)"><b>Format is the carve-out.</b> The three branches above are for everything except format. Format is never inferred or defaulted: if the brief does not name one, asking is mandatory and comes first, not a last resort. Propose-and-proceed governs audience, angle, count, mode. Format is a hard gate.</div>
       <div class="note"><b>Propose, do not interrogate.</b> Yes: "Brief is light on audience and count. My read: cross-border Shopify sellers, 12 spoken reels across your four usual pillars, gated. Starting the board on this, redirect me if the audience is wrong." No: "You didn't give me the audience, the count, the format, or the pillars. Please provide them." Lead with the thinking, not the gap.</div>
     </section>
 
